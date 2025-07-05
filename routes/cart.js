@@ -35,33 +35,43 @@ router.get('/', protect, async (req, res) => {
 // @route   POST /api/cart/items
 // @access  Private
 router.post('/items', protect, [
-  body('productId')
-    .notEmpty()
-    .withMessage('Product ID is required'),
-  body('quantity')
-    .isInt({ min: 1 })
-    .withMessage('Quantity must be at least 1'),
-  body('color')
-    .optional()
-    .isString(),
-  body('size')
-    .optional()
-    .isString()
+  // body('productId')
+  //   .notEmpty()
+  //   .withMessage('Product ID is required'),
+  // body('quantity')
+  //   .isInt({ min: 1 })
+  //   .withMessage('Quantity must be at least 1'),
+  // body('color')
+  //   .optional()
+  //   .isString(),
+  // body('size')
+  //   .optional()
+  //   .isString()
 ], async (req, res) => {
   try {
-    console.log('Add to cart request:', req.body);
+    console.log('Add to cart request body:', req.body);
+    console.log('Request headers:', req.headers);
     console.log('User:', req.user.id);
     
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      console.log('Validation errors:', errors.array());
+    // Manual validation since we commented out express-validator
+    const { productId, quantity, color, size } = req.body;
+    
+    if (!productId) {
+      console.log('Missing productId');
       return res.status(400).json({
         success: false,
-        errors: errors.array()
+        message: 'Product ID is required'
       });
     }
-
-    const { productId, quantity, color, size } = req.body;
+    
+    if (!quantity || quantity < 1) {
+      console.log('Invalid quantity:', quantity);
+      return res.status(400).json({
+        success: false,
+        message: 'Quantity must be at least 1'
+      });
+    }
+    
     console.log('Processing add to cart:', { productId, quantity, color, size });
 
     const product = await Product.findById(productId);
