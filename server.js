@@ -6,7 +6,7 @@ const compression = require('compression');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
-require('dotenv').config({ path: './config.env' });
+require('dotenv').config();
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -28,6 +28,17 @@ const notFound = require('./middleware/notFound');
 const app = express();
 
 // Connect the database
+console.log('Environment variables:', {
+  MONGODB_URI: process.env.MONGODB_URI ? 'Set' : 'Not set',
+  NODE_ENV: process.env.NODE_ENV,
+  PORT: process.env.PORT
+});
+
+if (!process.env.MONGODB_URI) {
+  console.error('MONGODB_URI is not set in environment variables');
+  process.exit(1);
+}
+
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
