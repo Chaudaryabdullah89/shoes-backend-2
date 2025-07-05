@@ -45,6 +45,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 })
 .then(conn => {
   console.log(`MongoDB Connected: ${conn.connection.host}`);
+  console.log('good to go')
 })
 .catch(error => {
   console.error('Database connection error:', error);
