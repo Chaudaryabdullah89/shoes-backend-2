@@ -77,8 +77,8 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// Static files
-app.use('/uploads', express.static('uploads'));
+// Static files - removed for serverless compatibility
+// All files are now served via Cloudinary
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

@@ -3,6 +3,7 @@ const { body, validationResult } = require('express-validator');
 const Product = require('../models/Product');
 const { protect, authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const cloudinary = require('../utils/cloudinary');
 
 const router = express.Router();
 
@@ -323,11 +324,34 @@ router.post('/', protect, authorize('admin'), upload.array('images', 10), [
       seoKeywords
     } = req.body;
 
-    // Handle images
-    const images = req.files ? req.files.map(file => ({
-      public_id: file.filename,
-      url: file.path
-    })) : [];
+    // Handle images - upload to Cloudinary
+    const images = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        try {
+          const result = await cloudinary.uploader.upload_stream(
+            {
+              folder: 'products',
+              width: 800,
+              crop: 'scale'
+            },
+            (error, result) => {
+              if (error) {
+                console.error('Cloudinary upload error:', error);
+                return;
+              }
+              images.push({
+                public_id: result.public_id,
+                url: result.secure_url
+              });
+            }
+          );
+          result.end(file.buffer);
+        } catch (error) {
+          console.error('Image upload error:', error);
+        }
+      }
+    }
 
     const productData = {
       name,
@@ -388,12 +412,33 @@ router.put('/:id', protect, authorize('admin'), upload.array('images', 10), asyn
       });
     }
 
-    // Handle images
+    // Handle images - upload to Cloudinary
     if (req.files && req.files.length > 0) {
-      const newImages = req.files.map(file => ({
-        public_id: file.filename,
-        url: file.path
-      }));
+      const newImages = [];
+      for (const file of req.files) {
+        try {
+          const result = await cloudinary.uploader.upload_stream(
+            {
+              folder: 'products',
+              width: 800,
+              crop: 'scale'
+            },
+            (error, result) => {
+              if (error) {
+                console.error('Cloudinary upload error:', error);
+                return;
+              }
+              newImages.push({
+                public_id: result.public_id,
+                url: result.secure_url
+              });
+            }
+          );
+          result.end(file.buffer);
+        } catch (error) {
+          console.error('Image upload error:', error);
+        }
+      }
       product.images = [...product.images, ...newImages];
     }
 

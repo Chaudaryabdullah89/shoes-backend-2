@@ -1,15 +1,7 @@
 const multer = require('multer');
-const path = require('path');
 
-// Set storage engine
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '../uploads/'));
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
-});
+// Use memory storage for serverless compatibility
+const storage = multer.memoryStorage();
 
 // File filter (accept only images)
 const fileFilter = (req, file, cb) => {

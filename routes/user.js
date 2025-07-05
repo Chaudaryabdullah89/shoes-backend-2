@@ -3,6 +3,7 @@ const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const cloudinary = require('../utils/cloudinary');
 
 const router = express.Router();
 
@@ -95,19 +96,45 @@ router.put('/avatar', protect, upload.single('avatar'), async (req, res) => {
 
     const user = await User.findById(req.user.id);
 
-    // Update avatar
-    user.avatar = {
-      public_id: req.file.filename,
-      url: req.file.path
-    };
+    // Upload to Cloudinary using buffer
+    const result = await cloudinary.uploader.upload_stream(
+      {
+        folder: 'avatars',
+        width: 150,
+        crop: 'scale'
+      },
+      (error, result) => {
+        if (error) {
+          return res.status(500).json({
+            success: false,
+            message: 'Error uploading to Cloudinary'
+          });
+        }
+        
+        // Update avatar
+        user.avatar = {
+          public_id: result.public_id,
+          url: result.secure_url
+        };
 
-    await user.save();
+        user.save().then(() => {
+          res.status(200).json({
+            success: true,
+            message: 'Avatar updated successfully',
+            avatar: user.avatar
+          });
+        }).catch(saveError => {
+          console.error('Save avatar error:', saveError);
+          res.status(500).json({
+            success: false,
+            message: 'Error saving avatar'
+          });
+        });
+      }
+    );
 
-    res.status(200).json({
-      success: true,
-      message: 'Avatar updated successfully',
-      avatar: user.avatar
-    });
+    // Write buffer to stream
+    result.end(req.file.buffer);
   } catch (error) {
     console.error('Update avatar error:', error);
     res.status(500).json({
