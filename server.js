@@ -27,6 +27,9 @@ const notFound = require('./middleware/notFound');
 
 const app = express();
 
+// Trust proxy for Vercel deployment
+app.set('trust proxy', 1);
+
 // Connect the database
 console.log('Environment variables:', {
   MONGODB_URI: process.env.MONGODB_URI ? 'Set' : 'Not set',
@@ -60,7 +63,13 @@ app.use(compression());
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  keyGenerator: (req) => {
+    // Use X-Forwarded-For header if available, otherwise use IP
+    return req.headers['x-forwarded-for'] || req.ip;
+  }
 });
 app.use('/api/', limiter);
 
