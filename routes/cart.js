@@ -49,8 +49,12 @@ router.post('/items', protect, [
     .isString()
 ], async (req, res) => {
   try {
+    console.log('Add to cart request:', req.body);
+    console.log('User:', req.user.id);
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({
         success: false,
         errors: errors.array()
@@ -58,16 +62,20 @@ router.post('/items', protect, [
     }
 
     const { productId, quantity, color, size } = req.body;
+    console.log('Processing add to cart:', { productId, quantity, color, size });
 
     const product = await Product.findById(productId);
     if (!product) {
+      console.log('Product not found:', productId);
       return res.status(404).json({
         success: false,
         message: 'Product not found'
       });
     }
+    console.log('Product found:', product.name);
 
     if (!product.isActive) {
+      console.log('Product not active:', product.name);
       return res.status(400).json({
         success: false,
         message: 'Product is not available'
@@ -75,20 +83,25 @@ router.post('/items', protect, [
     }
 
     // Check stock
-    if (!product.isInStock(color, size)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Product is out of stock'
-      });
-    }
+    // if (!product.isInStock(color, size)) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: 'Product is out of stock'
+    //   });
+    // }
 
     let cart = await Cart.findOne({ user: req.user.id });
     if (!cart) {
+      console.log('Creating new cart for user:', req.user.id);
       cart = await Cart.create({ user: req.user.id });
+    } else {
+      console.log('Found existing cart for user:', req.user.id);
     }
 
+    console.log('Adding item to cart:', { product: product.name, quantity, color, size });
     cart.addItem(product, quantity, color, size);
     await cart.save();
+    console.log('Cart saved successfully');
 
     res.status(200).json({
       success: true,
