@@ -27,8 +27,8 @@ const notFound = require('./middleware/notFound');
 
 const app = express();
 
-// Trust proxy for Vercel deployment
-app.set('trust proxy', 1);
+// Trust proxy for Vercel deployment - must be set before any middleware
+app.set('trust proxy', true);
 
 // Connect the database
 console.log('Environment variables:', {
