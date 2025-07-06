@@ -71,7 +71,13 @@ app.use(compression());
 
 // CORS configuration
 app.use(cors({
-  origin: true, // Allow all origins for now
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:3000',
+    'http://localhost:5175',
+    'https://shoes-store-six-sigma.vercel.app', // Add your frontend domain when deployed
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
